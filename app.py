@@ -2,36 +2,84 @@ from flask import Flask, render_template, request, redirect, url_for, make_respo
 from utils.qqwryReader import CzIp
 from flask import jsonify
 import IP2Location
+import geoip2.database
 
 app = Flask(__name__)
 cz = CzIp("resources/qqwry.dat")
 app.config['JSON_AS_ASCII'] = False
 database = IP2Location.IP2Location("resources/IP2LOCATION-LITE-DB11.BIN", "SHARED_MEMORY")
+# cityReader = geoip2.database.Reader("resources/GeoLite2-City.mmdb")
+# asnReader = geoip2.database.Reader("resources/GeoLite2-ASN.mmdb")
 
 
 @app.route('/myip', methods=['GET', 'POST'])
 def myip():
     ip = request.remote_addr
     rec = database.get_all(ip)
+    geo2Info = {}
+    with geoip2.database.Reader('resources/GeoLite2-City.mmdb') as cityReader:
+        try:
+            cityResponse = cityReader.city(ip)
+            geo2Info['ip'] = ip
+            geo2Info['continent_code'] = cityResponse.continent.code
+            geo2Info['continent'] = cityResponse.continent.names['zh-CN']
+            geo2Info['country_code'] = cityResponse.country.iso_code
+            geo2Info['country'] = cityResponse.country.names['zh-CN']
+            geo2Info['state'] = cityResponse.subdivisions.most_specific.name
+            geo2Info['state_code'] = cityResponse.subdivisions.most_specific.iso_code
+            geo2Info['city'] = cityResponse.city.names['zh-CN']
+            geo2Info['latitude'] = str(cityResponse.location.latitude)
+            geo2Info['longitude'] = str(cityResponse.location.longitude)
+            geo2Info['metro_code'] = str(cityResponse.location.metro_code)
+            geo2Info['time_zone'] = cityResponse.location.time_zone
+            geo2Info['zip_code'] = cityResponse.postal.code
+            geo2Info['network'] = str(cityResponse.traits.network)
+        except geoip2.errors.AddressNotFoundError:
+            print("IP do not found in city database!")
+            geo2Info['continent_code'] = "IP do not found in city database!"
+            geo2Info['continent'] = "IP do not found in city database!"
+            geo2Info['country_code'] = "IP do not found in city database!"
+            geo2Info['country'] = "IP do not found in city database!"
+            geo2Info['state'] = "IP do not found in city database!"
+            geo2Info['state_code'] = "IP do not found in city database!"
+            geo2Info['city'] = "IP do not found in city database!"
+            geo2Info['latitude'] = "IP do not found in city database!"
+            geo2Info['longitude'] = "IP do not found in city database!"
+            geo2Info['metro_code'] = "IP do not found in city database!"
+            geo2Info['time_zone'] = "IP do not found in city database!"
+            geo2Info['zip_code'] = "IP do not found in city database!"
+            geo2Info['network'] = "IP do not found in city database!"
+
+    with geoip2.database.Reader('resources/GeoLite2-ASN.mmdb') as asnReader:
+        try:
+            asnResponse = asnReader.asn(ip)
+            geo2Info['ASN'] = str(asnResponse.autonomous_system_number)
+            geo2Info['ASN_Organization'] = asnResponse.autonomous_system_organization
+        except geoip2.errors.AddressNotFoundError:
+            print("IP do not found in ASN database!")
+            geo2Info['ASN'] = "IP do not found in ASN database!"
+            geo2Info['ASN_Organization'] = "IP do not found in ASN database!"
+
     czInfo = {
         "ip": ip,
         "database_version": cz.get_version(),
         "ip_range": cz.get_ip_range(ip),
         "addresses": cz.get_addr_by_ip(ip)
     }
-    i2lInfo = {
-        "IP": ip,
-        "国家名称（短）": rec.country_short,
-        "国家名称（长）": rec.country_long,
-        "地区名称 ": rec.region,
-        "城市名称 ": rec.city,
-        "纬度 ": rec.latitude,
-        "经度 ": rec.longitude,
-        "邮政编码 ": rec.zipcode,
-        "时区": rec.timezone
-    }
+    # i2lInfo = {
+    #     "IP": ip,
+    #     "国家名称（短）": rec.country_short,
+    #     "国家名称（长）": rec.country_long,
+    #     "地区名称 ": rec.region,
+    #     "城市名称 ": rec.city,
+    #     "纬度 ": rec.latitude,
+    #     "经度 ": rec.longitude,
+    #     "邮政编码 ": rec.zipcode,
+    #     "时区": rec.timezone
+    # }
+
     # msg = jsonify(ipInfo)
-    return render_template("myip.html", cz=czInfo, i2l=rec)
+    return render_template("myip.html", cz=czInfo, i2l=rec, geo2=geo2Info)
 
 
 @app.route('/api/<askIp>', methods=['GET', 'POST'])
@@ -40,6 +88,9 @@ def api(askIp):
         ip = request.remote_addr
     else:
         ip = askIp
+    support_lan = ["de", "en", "es", "fr", "ja", "pt-BR", "ru", "zh-CN"]
+    # if language not in support_lan:
+    #     language = "zh-CN"
     rec = database.get_all(ip)
     czInfo = {
         "ip": ip,
@@ -49,22 +100,108 @@ def api(askIp):
     }
     i2lInfo = {
         "IP": ip,
-        "国家名称（短）": rec.country_short,
-        "国家名称（长）": rec.country_long,
-        "地区名称 ": rec.region,
-        "城市名称 ": rec.city,
-        "纬度 ": rec.latitude,
-        "经度 ": rec.longitude,
-        "邮政编码 ": rec.zipcode,
-        "时区": rec.timezone
+        "country_s ": rec.country_short,
+        "country_l ": rec.country_long,
+        "region ": rec.region,
+        "city ": rec.city,
+        "latitude ": rec.latitude,
+        "longitude ": rec.longitude,
+        "zipcode ": rec.zipcode,
+        "timezone ": rec.timezone
     }
+    geo2Info = {}
+    # try:
+    #     cityResponse = cityReader.city(ip)
+    #     geo2Info['continent_code'] = cityResponse.continent.code
+    #     geo2Info['continent'] = cityResponse.continent.names['zh-CN']
+    #     geo2Info['country_code'] = cityResponse.country.iso_code
+    #     geo2Info['country'] = cityResponse.country.names['zh-CN']
+    #     geo2Info['state'] = cityResponse.subdivisions.most_specific.name
+    #     geo2Info['state_code'] = cityResponse.subdivisions.most_specific.iso_code
+    #     geo2Info['city'] = cityResponse.city.names['zh-CN']
+    #     geo2Info['latitude'] = cityResponse.location.latitude
+    #     geo2Info['longitude'] = cityResponse.location.longitude
+    #     geo2Info['metro_code'] = cityResponse.location.metro_code
+    #     geo2Info['time_zone'] = cityResponse.location.time_zone
+    #     geo2Info['zip_code'] = cityResponse.postal.code
+    #     geo2Info['network'] = cityResponse.traits.network
+    # except geoip2.errors.AddressNotFoundError:
+    #     print("IP do not found in city database!")
+    #     geo2Info['continent_code'] = "IP do not found in city database!"
+    #     geo2Info['continent'] = "IP do not found in city database!"
+    #     geo2Info['country_code'] = "IP do not found in city database!"
+    #     geo2Info['country'] = "IP do not found in city database!"
+    #     geo2Info['state'] = "IP do not found in city database!"
+    #     geo2Info['state_code'] = "IP do not found in city database!"
+    #     geo2Info['city'] = "IP do not found in city database!"
+    #     geo2Info['latitude'] = "IP do not found in city database!"
+    #     geo2Info['longitude'] = "IP do not found in city database!"
+    #     geo2Info['metro_code'] = "IP do not found in city database!"
+    #     geo2Info['time_zone'] = "IP do not found in city database!"
+    #     geo2Info['zip_code'] = "IP do not found in city database!"
+    #     geo2Info['network'] = "IP do not found in city database!"
+    #
+    # try:
+    #     asnResponse = asnReader.asn(ip)
+    #     geo2Info['ASN'] = asnResponse.autonomous_system_number
+    #     geo2Info['ASN_Organization'] = asnResponse.autonomous_system_organization
+    # except geoip2.errors.AddressNotFoundError:
+    #     print("IP do not found in ASN database!")
+    #     geo2Info['ASN'] = "IP do not found in ASN database!"
+    #     geo2Info['ASN_Organization'] = "IP do not found in ASN database!"
+    with geoip2.database.Reader('resources/GeoLite2-City.mmdb') as cityReader:
+        try:
+            cityResponse = cityReader.city(ip)
+            geo2Info['ip'] = ip
+            geo2Info['continent_code'] = cityResponse.continent.code
+            geo2Info['continent'] = cityResponse.continent.names['zh-CN']
+            geo2Info['country_code'] = cityResponse.country.iso_code
+            geo2Info['country'] = cityResponse.country.names['zh-CN']
+            geo2Info['state'] = cityResponse.subdivisions.most_specific.name
+            geo2Info['state_code'] = cityResponse.subdivisions.most_specific.iso_code
+            geo2Info['city'] = cityResponse.city.name
+            geo2Info['latitude'] = str(cityResponse.location.latitude)
+            geo2Info['longitude'] = str(cityResponse.location.longitude)
+            geo2Info['metro_code'] = str(cityResponse.location.metro_code)
+            geo2Info['time_zone'] = cityResponse.location.time_zone
+            geo2Info['zip_code'] = cityResponse.postal.code
+            geo2Info['network'] = str(cityResponse.traits.network)
+        except geoip2.errors.AddressNotFoundError:
+            print("IP do not found in city database!")
+            geo2Info['continent_code'] = "IP do not found in city database!"
+            geo2Info['continent'] = "IP do not found in city database!"
+            geo2Info['country_code'] = "IP do not found in city database!"
+            geo2Info['country'] = "IP do not found in city database!"
+            geo2Info['state'] = "IP do not found in city database!"
+            geo2Info['state_code'] = "IP do not found in city database!"
+            geo2Info['city'] = "IP do not found in city database!"
+            geo2Info['latitude'] = "IP do not found in city database!"
+            geo2Info['longitude'] = "IP do not found in city database!"
+            geo2Info['metro_code'] = "IP do not found in city database!"
+            geo2Info['time_zone'] = "IP do not found in city database!"
+            geo2Info['zip_code'] = "IP do not found in city database!"
+            geo2Info['network'] = "IP do not found in city database!"
+
+    with geoip2.database.Reader('resources/GeoLite2-ASN.mmdb') as asnReader:
+        try:
+            asnResponse = asnReader.asn(ip)
+            geo2Info['ASN'] = str(asnResponse.autonomous_system_number)
+            geo2Info['ASN_Organization'] = asnResponse.autonomous_system_organization
+        except geoip2.errors.AddressNotFoundError:
+            print("IP do not found in ASN database!")
+            geo2Info['ASN'] = "IP do not found in ASN database!"
+            geo2Info['ASN_Organization'] = "IP do not found in ASN database!"
     ipInfo = {
-        "纯真数据库": czInfo,
-        "IP2Location数据库": i2lInfo
+        "cz88 Database": czInfo,
+        "IP2Location Database": i2lInfo,
+        "Geoip2Lite Database": geo2Info
     }
     msg = jsonify(ipInfo)
     return msg
 
+
+# cityReader.close()
+# asnReader.close()
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,17 +1,17 @@
 import IP2Location
 
 
-# class IP2LocationReader:
-#
-#     def __init__(self, db_file="../resources/IP2LOCATION-DB25.BIN", SHARED_MEMORY=False):
-#         if SHARED_MEMORY:
-#             db = IP2Location.IP2Location(self.db, "SHARED_MEMORY")
-#         else:
-#             db = IP2Location.IP2Location(self.db)
-#
-#     def get_info(self, ip):
-#         record = self.db.get_all(ip)
-#         return record
+class IP2LocationReader:
+
+    def __init__(self, db_file="../resources/IP2LOCATION-DB25.BIN", SHARED_MEMORY=False):
+        if SHARED_MEMORY:
+            db = IP2Location.IP2Location(self.db, "SHARED_MEMORY")
+        else:
+            db = IP2Location.IP2Location(self.db)
+
+    def get_info(self, ip):
+        record = self.db.get_all(ip)
+        return record
 
 
 
