@@ -12,9 +12,13 @@ database = IP2Location.IP2Location("resources/IP2LOCATION-LITE-DB11.BIN", "SHARE
 # asnReader = geoip2.database.Reader("resources/GeoLite2-ASN.mmdb")
 
 
-@app.route('/myip', methods=['GET', 'POST'])
-def myip():
-    ip = request.remote_addr
+@app.route('/<askIp>', methods=['GET', 'POST'])
+def myip(askIp):
+    if askIp == "myip":
+        ip = request.remote_addr
+    else:
+        ip = askIp
+    # ip = request.remote_addr
     rec = database.get_all(ip)
     geo2Info = {}
     with geoip2.database.Reader('resources/GeoLite2-City.mmdb') as cityReader:
