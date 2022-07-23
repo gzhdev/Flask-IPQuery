@@ -1,0 +1,2 @@
+flask~=2.1.2
+ip2location~=8.8.0

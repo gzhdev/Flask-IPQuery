@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<table>
+    <tr><th>纯真数据库</th></tr>
+    <tr><td>数据库版本</td><td>{{ cz.database_version }}</td></tr>
+    <tr><td>ip</td><td>{{ cz.ip }}</td></tr>
+    <tr><td>ip段</td><td>{{ cz.ip_range }}</td></tr>
+    <tr><td>地理位置</td><td>{{ cz.addresses }}</td></tr>
+</table>
+<table>
+    <tr><th>IP2Location数据库</th></tr>
+    <tr><td>IP</td><td>{{ i2l.ip }}</td></tr>
+    <tr><td>国家名称（短）</td><td>{{ i2l.country_short }}</td></tr>
+    <tr><td>国家名称（长）</td><td>{{ i2l.country_long }}</td></tr>
+    <tr><td>地区名称</td><td>{{ i2l.region }}</td></tr>
+    <tr><td>城市名称</td><td>{{ i2l.city }}</td></tr>
+    <tr><td>纬度</td><td>{{ i2l.latitude }}</td></tr>
+    <tr><td>经度</td><td>{{ i2l.longitude }}</td></tr>
+    <tr><td>邮政编码</td><td>{{ i2l.zipcode }}</td></tr>
+    <tr><td>时区</td><td>{{ i2l.timezone }}</td></tr>
+</table>
+</body>
+</html>
