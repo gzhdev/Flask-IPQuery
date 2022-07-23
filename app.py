@@ -27,7 +27,7 @@ def myip():
             geo2Info['country'] = cityResponse.country.names['zh-CN']
             geo2Info['state'] = cityResponse.subdivisions.most_specific.name
             geo2Info['state_code'] = cityResponse.subdivisions.most_specific.iso_code
-            geo2Info['city'] = cityResponse.city.names['zh-CN']
+            geo2Info['city'] = cityResponse.city.name
             geo2Info['latitude'] = str(cityResponse.location.latitude)
             geo2Info['longitude'] = str(cityResponse.location.longitude)
             geo2Info['metro_code'] = str(cityResponse.location.metro_code)
