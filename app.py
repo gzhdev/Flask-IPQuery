@@ -11,6 +11,15 @@ app.config['JSON_AS_ASCII'] = False
 database = IP2Location.IP2Location("resources/IP2LOCATION-LITE-DB11.BIN", "SHARED_MEMORY")
 
 
+def getIP(askIp):
+    if askIp == "myip":
+        # ip = request.remote_addr
+        ip = request.headers.get("X-Forwarded-For")
+    else:
+        ip = askIp
+    return ip
+
+
 def czReader(ip):
     czInfo = {
         "ip": ip,
@@ -86,34 +95,81 @@ def geoip2Reader(ip):
 
 @app.route('/<askIp>', methods=['GET', 'POST'])
 def myip(askIp):
-    if askIp == "myip":
-        # ip = request.remote_addr
-        ip = request.headers.get("X-Forwarded-For")
-    else:
-        ip = askIp
+    ip = getIP(askIp)
+    # if askIp == "myip":
+    #     # ip = request.remote_addr
+    #     ip = request.headers.get("X-Forwarded-For")
+    # else:
+    #     ip = askIp
     # ip = request.remote_addr
-    rec = database.get_all(ip)
-    czInfo = czReader(ip)
-    geo2Info = geoip2Reader(ip)
+    try:
+        version = IPy.IP(ip).version()
+        if version == 4:
+            czInfo = czReader(ip)
+            rec = database.get_all(ip)
+            geo2Info = geoip2Reader(ip)
+            return render_template("myip.html", cz=czInfo, i2l=rec, geo2=geo2Info)
+        elif version == 6:
+            czInfo = {
+                "ip": "IPv6 is not supported",
+                "database_version": "IPv6 is not supported",
+                "ip_range": "IPv6 is not supported",
+                "addresses": "IPv6 is not supported"
+            }
+            rec = database.get_all(ip)
+            geo2Info = geoip2Reader(ip)
+            return render_template("myip.html", cz=czInfo, i2l=rec, geo2=geo2Info)
+        else:
+            return "IP格式非法"
+    except Exception as e:
+        return "IP格式非法"
 
-    return render_template("myip.html", cz=czInfo, i2l=rec, geo2=geo2Info)
+    # rec = database.get_all(ip)
+    # czInfo = czReader(ip)
+    # geo2Info = geoip2Reader(ip)
+
+    # return render_template("myip.html", cz=czInfo, i2l=rec, geo2=geo2Info)
     # return ip
 
 
 @app.route('/api/<askIp>', methods=['GET', 'POST'])
 def api(askIp):
-    if askIp == "myip":
-        # ip = request.remote_addr
-        ip = request.headers.get("X-Forwarded-For")
-    else:
-        ip = askIp
+    ip = getIP(askIp)
+    # if askIp == "myip":
+    #     # ip = request.remote_addr
+    #     ips = request.headers.get("X-Forwarded-For")
+    #     ip = ips.split(', ')[0]
+    # else:
+    #     ip = askIp
     support_lan = ["de", "en", "es", "fr", "ja", "pt-BR", "ru", "zh-CN"]
     # if language not in support_lan:
     #     language = "zh-CN"
     # rec = database.get_all(ip)
-    czInfo = czReader(ip)
-    i2lInfo = i2lReader(ip)
-    geo2Info = geoip2Reader(ip)
+    # czInfo = czReader(ip)
+    # i2lInfo = i2lReader(ip)
+    # geo2Info = geoip2Reader(ip)
+    try:
+        version = IPy.IP(ip).version()
+        if version == 4:
+            czInfo = czReader(ip)
+            i2lInfo = i2lReader(ip)
+            geo2Info = geoip2Reader(ip)
+            # return render_template("myip.html", cz=czInfo, i2l=rec, geo2=geo2Info)
+        elif version == 6:
+            czInfo = {
+                "ip": "IPv6 is not supported",
+                "database_version": "IPv6 is not supported",
+                "ip_range": "IPv6 is not supported",
+                "addresses": "IPv6 is not supported"
+            }
+            i2lInfo = i2lReader(ip)
+            geo2Info = geoip2Reader(ip)
+            # return render_template("myip.html", cz=czInfo, i2l=rec, geo2=geo2Info)
+        else:
+            return jsonify({"error": "IP格式非法"})
+    except Exception as e:
+        return jsonify({"error": "IP格式非法"})
+
     ipInfo = {
         "cz88 Database": czInfo,
         "IP2Location Database": i2lInfo,
