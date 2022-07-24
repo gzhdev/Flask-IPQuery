@@ -13,8 +13,8 @@ database = IP2Location.IP2Location("resources/IP2LOCATION-LITE-DB11.BIN", "SHARE
 
 def getIP(askIp):
     if askIp == "myip":
-        # ip = request.remote_addr
-        ip = request.headers.get("X-Forwarded-For")
+        ips = request.headers.get("X-Forwarded-For")
+        ip = ips.split(', ')[0]
     else:
         ip = askIp
     return ip
