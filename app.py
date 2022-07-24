@@ -8,6 +8,8 @@ app = Flask(__name__)
 cz = CzIp("resources/qqwry.dat")
 app.config['JSON_AS_ASCII'] = False
 database = IP2Location.IP2Location("resources/IP2LOCATION-LITE-DB11.BIN", "SHARED_MEMORY")
+
+
 # cityReader = geoip2.database.Reader("resources/GeoLite2-City.mmdb")
 # asnReader = geoip2.database.Reader("resources/GeoLite2-ASN.mmdb")
 
@@ -15,7 +17,8 @@ database = IP2Location.IP2Location("resources/IP2LOCATION-LITE-DB11.BIN", "SHARE
 @app.route('/<askIp>', methods=['GET', 'POST'])
 def myip(askIp):
     if askIp == "myip":
-        ip = request.remote_addr
+        # ip = request.remote_addr
+        ip = request.headers.get("X-Forwarded-For")
     else:
         ip = askIp
     # ip = request.remote_addr
@@ -84,12 +87,14 @@ def myip(askIp):
 
     # msg = jsonify(ipInfo)
     return render_template("myip.html", cz=czInfo, i2l=rec, geo2=geo2Info)
+    # return ip
 
 
 @app.route('/api/<askIp>', methods=['GET', 'POST'])
 def api(askIp):
     if askIp == "myip":
-        ip = request.remote_addr
+        # ip = request.remote_addr
+        ip = request.headers.get("X-Forwarded-For")
     else:
         ip = askIp
     support_lan = ["de", "en", "es", "fr", "ja", "pt-BR", "ru", "zh-CN"]
