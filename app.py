@@ -87,8 +87,8 @@ def geoip2Reader(ip):
 @app.route('/<askIp>', methods=['GET', 'POST'])
 def myip(askIp):
     if askIp == "myip":
-        # ip = request.remote_addr
-        ip = request.headers.get("X-Forwarded-For")
+        ip = request.remote_addr
+        # ip = request.headers.get("X-Forwarded-For")
     else:
         ip = askIp
     # ip = request.remote_addr
@@ -103,8 +103,8 @@ def myip(askIp):
 @app.route('/api/<askIp>', methods=['GET', 'POST'])
 def api(askIp):
     if askIp == "myip":
-        # ip = request.remote_addr
-        ip = request.headers.get("X-Forwarded-For")
+        ip = request.remote_addr
+        # ip = request.headers.get("X-Forwarded-For")
     else:
         ip = askIp
     support_lan = ["de", "en", "es", "fr", "ja", "pt-BR", "ru", "zh-CN"]
